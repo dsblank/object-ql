@@ -14,6 +14,8 @@ Originally, I had extended the syntax of language Python and therefore called th
 `Pythonish`. However, currently, the language is pure Python without any change in
 syntax.
 
+Each object can be identified by its type, eg `person`, `note`, `family`, etc.
+
 Examples:
 
 Find the person with a particular gramps_id:
@@ -35,8 +37,7 @@ any([('vote' in str(get_note(handle).text)) for handle in person.get_note_list()
 
 ## Usage
 
-Each object can be identified by its type, eg `person`, `note`, `family`, etc. If you don't know
-what the type is, you can use `obj`, like:
+If you don't know what the type is, you can use `obj`, like:
 
 ```python
 "23" in obj.gramps_id
