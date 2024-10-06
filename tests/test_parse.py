@@ -32,3 +32,8 @@ def test_brackets():
     assert parse(
         "((((((((((({'class'}=='person' or {'name'}=='John Doe')))) and {'date'}['year'] > 2021)))))))"
     ) == "(row['class'] == 'person' or row['name'] == 'John Doe') and row['date']['year'] > 2021"
+
+# Extensions:
+
+def test_attribute():
+    assert parse("{'date'}.year > 2021") == "get_attr(row['date'], 'year') > 2021"

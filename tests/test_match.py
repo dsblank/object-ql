@@ -110,3 +110,17 @@ def test_all_number():
     assert not q.match({"array": []})
     assert not q.match({"array": [{"value": 1}, {"value": 3}]})
     assert q.match({"array": [{"value": 3}, {"value": 3}]})
+
+# Extensions:
+
+def test_attribute():
+    q = PythonishQuery("{'date'}.year > 2021")
+    assert q.match({"date": {'year': 2022}})
+
+def test_match_attribute():
+    query = "{'one'}.two == 'x'"
+    q = PythonishQuery(query)
+    obj = {"one": {"two": "x"}, "three": {"four": ["y"]}}
+    assert q.match(obj)
+    assert match(query, obj)
+

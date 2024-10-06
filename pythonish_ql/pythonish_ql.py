@@ -18,10 +18,23 @@ from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
 
+def get_attr(obj, attr):
+    if hasattr(obj, attr):
+        return getattr(obj, attr)
+    elif isinstance(obj, dict):
+        if attr in obj:
+            return obj[attr]
+
 class PythonishTransformer(ast.NodeTransformer):
     def visit_Set(self, node):
         expr = ast.parse("row['%s']" % node.elts[0].value)
         return expr.body[0].value
+
+    def visit_Attribute(self, node):
+        value = self.visit(node.value)
+        function = ast.parse("get_attr")
+        #node.Name(node.attr
+        return ast.Call(function.body[0].value, [value, ast.Constant(node.attr)], [])
 
 TRANSFORMER = PythonishTransformer()
 
@@ -72,7 +85,7 @@ def transform(query: str):
         ast.fix_missing_locations(converted)
         return converted
     except Exception as exc:
-        print(exc)
+        print("Parse error: %r" % exc)
         return None
 
 def parse(query: str) -> str:
@@ -83,23 +96,35 @@ def parse(query: str) -> str:
     else:
         return None
 
+def find_handle(obj, method, env):
+    """Find the handle in obj, or default to find in row."""
+    if isinstance(obj, str):
+        return to_dict(method(obj))
+    elif isinstance(obj, dict):
+        if "handle" in obj:
+            return to_dict(method(obj["handle"]))
+        elif "ref" in obj:
+            return to_dict(method(obj["ref"]))
+    elif obj is None:
+        return find_handle(env["row"], method, env)
+    return None
+
 def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     """Create an environment with useful functions and row."""
-    if db is None:
-        env = {}
-    else:
-        env = {
-            "get_person": lambda handle: to_dict(db.get_person_from_handle(handle)),
-            "get_note": lambda handle: to_dict(db.get_note_from_handle(handle)),
-            "get_family": lambda handle: to_dict(db.get_family_from_handle(handle)),
-            "get_event": lambda handle: to_dict(db.get_event_from_handle(handle)),
-            "get_media": lambda handle: to_dict(db.get_media_from_handle(handle)),
-            "get_place": lambda handle: to_dict(db.get_place_from_handle(handle)),
-            "get_tag": lambda handle: to_dict(db.get_tag_from_handle(handle)),
-            "get_source": lambda handle: to_dict(db.get_source_from_handle(handle)),
-            "get_citation": lambda handle: to_dict(db.get_citation_from_handle(handle)),
-            "get_repository": lambda handle: to_dict(db.get_repository_from_handle(handle)),
-        }
+    env = {"get_attr": get_attr}
+    if db is not None:
+        env.update({
+            "get_person": lambda obj=None: find_handle(obj, db.get_person_from_handle, env),
+            "get_note": lambda obj=None: find_handle(obj, db.get_note_from_handle, env),
+            "get_family": lambda obj=None: find_handle(obj, db.get_family_from_handle, env),
+            "get_event": lambda obj=None: find_handle(obj, db.get_event_from_handle, env),
+            "get_media": lambda obj=None: find_handle(obj, db.get_media_from_handle, env),
+            "get_place": lambda obj=None: find_handle(obj, db.get_place_from_handle, env),
+            "get_tag": lambda obj=None: find_handle(obj, db.get_tag_from_handle, env),
+            "get_source": lambda obj=None: find_handle(obj, db.get_source_from_handle, env),
+            "get_citation": lambda obj=None: find_handle(obj, db.get_citation_from_handle, env),
+            "get_repository": lambda obj=None: find_handle(obj, db.get_repository_from_handle, env),
+        })
     env.update(kwargs)
     return env
 
@@ -111,7 +136,7 @@ class PythonishQuery():
         converted = transform(query)
         if converted:
             self.code_object = compile(converted, "<query>", mode="eval")
-        
+
 
     def match(self, obj: dict[str, Any]) -> bool:
         if self.code_object is None:
@@ -121,10 +146,10 @@ class PythonishQuery():
         try:
             results = eval(self.code_object, env, {})
         except Exception as esc:
-            print(obj)
-            print(esc)
             results = False
-            print(results)
+            #print(obj)
+            #print("Parse mismatch: %r" % esc)
+            #print(results)
         return results
 
     def iter_objects(self) -> Generator[PrimaryObject, None, None]:
