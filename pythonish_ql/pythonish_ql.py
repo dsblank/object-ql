@@ -17,6 +17,7 @@ from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
+from gramps.gen.simple import SimpleAccess
 
 
 GRAMPS_OBJECT_NAMES = {
@@ -88,6 +89,7 @@ def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     env = {}
     if db is not None:
         env.update({
+            "sa": SimpleAccess(db),
             "get_person": lambda obj=None: find_handle(obj, db.get_person_from_handle, env),
             "get_note": lambda obj=None: find_handle(obj, db.get_note_from_handle, env),
             "get_family": lambda obj=None: find_handle(obj, db.get_family_from_handle, env),
