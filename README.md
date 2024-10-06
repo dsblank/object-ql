@@ -1,15 +1,44 @@
 # pythonish-ql
 
-A Pythonish Query Language, for the [Gramps Project](https://gramps-project.org/) and other systems.
+A Pythonish Query Language, for the [Gramps Project](https://gramps-project.org/) and other objects.
 
 This project is designed to be a drop-in replacement for https://github.com/DavidMStraub/gramps-ql
 
 Rather than having to build, and learn, a new query language, the idea
-is to build ontop of Python, the native language of the Gramps Project.
+is to build on top of Python, the native language of the Gramps Project.
+And, rather than having to convert the Gramps raw data into objects, then dicts, and
+then back again to objects (when needed), this query system can operate directly
+on the objects.
+
+Originally, I had extended the syntax of language Python and therefore called this
+`Pythonish`. However, currently, the language is pure Python without any change in
+syntax.
 
 Examples:
 
-```python
+Find the person with a particular gramps_id:
 
+```python
+person.gramps_id == 'person001'
 ```
 
+Find all of the people with notes:
+
+```python
+person.get_note_list()
+```
+Find all of the people with notes that mention 'vote':
+
+```python
+any([('vote' in str(get_note(handle).text)) for handle in person.get_note_list()])
+```
+
+## Usage
+
+Each object can be identified by its type, eg `person`, `note`, `family`, etc. If you don't know
+what the type is, you can use `obj`, like:
+
+```python
+"23" in obj.gramps_id
+```
+You can use standard dot notation to reference any object. Refer to [Gramps Primary Objects](https://www.gramps-project.org/wiki/index.php/Using_database_API#Primary_Objects) for the structure of Gramps objects.
