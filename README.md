@@ -42,3 +42,11 @@ what the type is, you can use `obj`, like:
 "23" in obj.gramps_id
 ```
 You can use standard dot notation to reference any object. Refer to [Gramps Primary Objects](https://www.gramps-project.org/wiki/index.php/Using_database_API#Primary_Objects) for the structure of Gramps objects.
+
+You can also use the `SimpleAccess` methods that make access to some data much easier. The [SimpleAccess](https://gramps-project.org/docs/simple.html#module-gramps.gen.simple._simpleaccess) is available as `sa`, as shown below.
+
+Select all of the people that have are married to a person named "Donna":
+
+```python
+sa.first_name(sa.spouse(person)) == "Donna"
+```
