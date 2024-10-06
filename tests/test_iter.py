@@ -45,21 +45,17 @@ def test_fixture(db):
 
 
 def test_person_gramps_id(db):
-    q = PythonishQuery("{'class'} == 'person'", db=db)
+    q = PythonishQuery("person", db=db)
     assert len(list(q.iter_objects())) == 1
     for obj in q.iter_objects():
         assert isinstance(obj, Person)
-    q = PythonishQuery("""{'class'} == 'person' and {'gramps_id'} == "person001" """, db=db)
+    q = PythonishQuery("""person.gramps_id == "person001" """, db=db)
     assert len(list(q.iter_objects())) == 1
-    q = PythonishQuery("""{'class'} == 'person' and {'gramps_id'} != "person001" """, db=db)
+    q = PythonishQuery("""person.gramps_id != "person001" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonishQuery("""{'class'} == 'person' and {'gramps_id'} == "person002" """, db=db)
+    q = PythonishQuery("""person.gramps_id == "person002" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonishQuery("""{'class'} == 'person' and {'gramps_id'} > "person002" """, db=db)
+    q = PythonishQuery("""person.gramps_id > "person002" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonishQuery("""{'class'} == 'person' and {'gramps_id'} < "person002" """, db=db)
-    assert len(list(q.iter_objects())) == 1
-    q = PythonishQuery("{'class'} == 'person' and {'gramps_id'} < 'person002'", db=db)
-    assert len(list(q.iter_objects())) == 1
-    q = PythonishQuery("{'class'} == 'person' and {'gramps_id'} < 'person002'", db=db)
+    q = PythonishQuery("""person.gramps_id < "person002" """, db=db)
     assert len(list(q.iter_objects())) == 1

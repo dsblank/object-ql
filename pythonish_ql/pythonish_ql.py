@@ -18,25 +18,6 @@ from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
 
-def get_attr(obj, attr):
-    if hasattr(obj, attr):
-        return getattr(obj, attr)
-    elif isinstance(obj, dict):
-        if attr in obj:
-            return obj[attr]
-
-class PythonishTransformer(ast.NodeTransformer):
-    def visit_Set(self, node):
-        expr = ast.parse("row['%s']" % node.elts[0].value)
-        return expr.body[0].value
-
-    def visit_Attribute(self, node):
-        value = self.visit(node.value)
-        function = ast.parse("get_attr")
-        #node.Name(node.attr
-        return ast.Call(function.body[0].value, [value, ast.Constant(node.attr)], [])
-
-TRANSFORMER = PythonishTransformer()
 
 GRAMPS_OBJECT_NAMES = {
     "person": "people",
@@ -51,13 +32,6 @@ GRAMPS_OBJECT_NAMES = {
 }
 
 
-def to_dict(obj: PrimaryObject) -> dict[str, Any]:
-    """Convert a Gramps object to its dictionary representation."""
-    obj_dict = json.loads(to_json(obj))
-    obj_dict["class"] = obj_dict["_class"].lower()
-    return obj_dict
-
-
 def match(
     query: str,
     obj: Union[PrimaryObject, dict[str, Any]],
@@ -65,9 +39,6 @@ def match(
 ) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
     pq = PythonishQuery(query=query, db=db)
-    if isinstance(obj, PrimaryObject):
-        obj_dict = to_dict(obj)
-        return pq.match(obj_dict)
     return pq.match(obj)
 
 
@@ -76,46 +47,45 @@ def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, N
     pq = PythonishQuery(query=query, db=db)
     return pq.iter_objects()
 
-def transform(query: str):
-    """Convert query string into a converted ast."""
+def apply(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+    """Iterate over primary objects in a Gramps database."""
+    pq = PythonishQuery(query=query, db=db)
+    return pq.iter_objects_apply()
+
+def parse_to_ast(query: str):
+    """Parse query string into ast."""
     try:
         ast_query = ast.parse(query, mode="eval")
         ast.fix_missing_locations(ast_query)
-        converted = TRANSFORMER.visit(ast_query)
-        ast.fix_missing_locations(converted)
-        return converted
+        return ast_query
     except Exception as exc:
         print("Parse error: %r" % exc)
         return None
 
 def parse(query: str) -> str:
-    """Parse a query into a transformed query."""
-    converted = transform(query)
-    if converted:
-        return ast.unparse(converted)
+    """Parse a query into ast and return ."""
+    parsed_ast = parse_to_ast(query)
+    if parsed_ast:
+        return ast.unparse(parsed_ast)
     else:
         return None
 
 def find_handle(obj, method, env):
     """Find the handle in obj, or default to find in row."""
     if isinstance(obj, str):
-        return to_dict(method(obj))
+        return method(obj)
     elif isinstance(obj, dict):
         if "handle" in obj:
-            return to_dict(method(obj["handle"]))
+            return method(obj["handle"])
         elif "ref" in obj:
-            return to_dict(method(obj["ref"]))
-    elif obj is None:
-        try:
-            result = find_handle(env["row"], method, env)
-        except Exception:
-            result = None
-        return result
+            return method(obj["ref"])
+    elif hasattr(obj, "ref"):
+        return method(obj.ref)
     return None
 
 def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
-    """Create an environment with useful functions and row."""
-    env = {"get_attr": get_attr}
+    """Create an environment with useful functions and self."""
+    env = {}
     if db is not None:
         env.update({
             "get_person": lambda obj=None: find_handle(obj, db.get_person_from_handle, env),
@@ -137,16 +107,17 @@ class PythonishQuery():
         self.query = query
         self.db = db
         self.code_object = None
-        converted = transform(query)
-        if converted:
-            self.code_object = compile(converted, "<query>", mode="eval")
+        parsed_ast = parse_to_ast(query)
+        if parsed_ast:
+            self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
 
     def match(self, obj: dict[str, Any]) -> bool:
         if self.code_object is None:
             return False
 
-        env = make_env(self.db, row=obj)
+        key = obj.__class__.__name__.lower()
+        env = make_env(self.db, **{key: obj, "obj": obj})
         try:
             results = eval(self.code_object, env, {})
         except Exception as esc:
@@ -163,6 +134,15 @@ class PythonishQuery():
         for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
             iter_method = getattr(self.db, f"iter_{objects_name}")
             for obj in iter_method():
-                obj_dict = to_dict(obj)
-                if self.match(obj_dict):
+                if self.match(obj):
                     yield obj
+
+    def iter_objects_apply(self) -> Generator[PrimaryObject, None, None]:
+        """Iterate over primary objects in a Gramps database."""
+        if not self.db:
+            raise ValueError("Database is needed for iterating objects!")
+        for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
+            iter_method = getattr(self.db, f"iter_{objects_name}")
+            for obj in iter_method():
+                yield self.match(obj)
+

@@ -64,43 +64,28 @@ def test_fixture(db):
 
 
 def test_get_person(db):
-    q = PythonishQuery("'handle001' in [x['ref'] for x in {'person_ref_list'}]", db=db)
+    q = PythonishQuery("'handle001' in [get_person(ref).get_handle() for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_0(db):
-    q = PythonishQuery("any([get_person(x['ref'])['gramps_id'] == 'person001' for x in {'person_ref_list'}])", db=db)
+    q = PythonishQuery("[get_person(ref).gramps_id == 'person001' for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_1(db):
-    q = PythonishQuery("[get_person('handle001') for x in {'person_ref_list'}]", db=db)
+    q = PythonishQuery("[get_person('handle001') for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_2(db):
-    q = PythonishQuery("any([get_person(x['ref'])['gramps_id'] == 'person001' for x in {'person_ref_list'}])", db=db)
+    q = PythonishQuery("any([get_person(x).gramps_id == 'person001' for x in person.get_person_ref_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_note(db):
-    q = PythonishQuery("'handle003' in {'note_list'} and {'gramps_id'} == 'person002'", db=db)
+    q = PythonishQuery("'handle003' in person.get_note_list() and person.gramps_id == 'person002'", db=db)
     assert len(list(q.iter_objects())) == 1
-    q = PythonishQuery("any([get_note(ref)['gramps_id'] == 'note003' for ref in {'note_list'}])", db=db)
+    q = PythonishQuery("any([get_note(ref).gramps_id == 'note003' for ref in person.get_note_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
-
 
 def test_get_note_0(db):
-    q = PythonishQuery("any([get_note(ref) for ref in {'note_list'}])", db=db)
-    assert len(list(q.iter_objects())) == 1
-
-# Enhancements
-
-def test_get_person_from_ref_list(db):
-    q = PythonishQuery("any([get_person(ref)['gramps_id'] == 'person001' for ref in {'person_ref_list'}])", db=db)
-    assert len(list(q.iter_objects())) == 1
-
-def test_get_person_from_top_level(db):
-    q = PythonishQuery("get_person()['gramps_id'] == 'person001'", db=db)
-    assert len(list(q.iter_objects())) == 1
-
-def test_get_person_from_top_level_attributes(db):
-    q = PythonishQuery("get_person().gramps_id == 'person001'", db=db)
+    q = PythonishQuery("any([get_note(ref) for ref in person.get_note_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
 
