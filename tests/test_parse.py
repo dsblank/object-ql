@@ -37,3 +37,7 @@ def test_brackets():
 
 def test_attribute():
     assert parse("{'date'}.year > 2021") == "get_attr(row['date'], 'year') > 2021"
+
+def test_two_attribute():
+    assert parse("{'class'} == 'person' or {'date'}.year > 2021") == "row['class'] == 'person' or get_attr(row['date'], 'year') > 2021"
+

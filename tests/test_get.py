@@ -100,3 +100,7 @@ def test_get_person_from_top_level(db):
     q = PythonishQuery("get_person()['gramps_id'] == 'person001'", db=db)
     assert len(list(q.iter_objects())) == 1
 
+def test_get_person_from_top_level_attributes(db):
+    q = PythonishQuery("get_person().gramps_id == 'person001'", db=db)
+    assert len(list(q.iter_objects())) == 1
+

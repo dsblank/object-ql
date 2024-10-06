@@ -106,7 +106,11 @@ def find_handle(obj, method, env):
         elif "ref" in obj:
             return to_dict(method(obj["ref"]))
     elif obj is None:
-        return find_handle(env["row"], method, env)
+        try:
+            result = find_handle(env["row"], method, env)
+        except Exception:
+            result = None
+        return result
     return None
 
 def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
