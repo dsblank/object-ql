@@ -71,6 +71,18 @@ def apply(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     pq = PythonishQuery(query=query, db=db)
     return pq.iter_objects_apply()
 
+def get_tables(query: str):
+    """Get the tables mentioned in a query"""
+    ast_query = parse_to_ast(query)
+    visitor = VariableVisitor()
+    visitor.visit(ast_query)
+    result = list((visitor.used_variables - visitor.assigned_variables) &
+                  set(GRAMPS_OBJECT_NAMES.keys()))
+    if result:
+        return result
+    else:
+        return list(GRAMPS_OBJECT_NAMES.keys())
+
 def parse_to_ast(query: str):
     """Parse query string into ast."""
     try:
@@ -126,11 +138,23 @@ def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     env.update(kwargs)
     return env
 
+class VariableVisitor(ast.NodeVisitor):
+    def __init__(self):
+        self.used_variables = set()
+        self.assigned_variables = set()
+
+    def visit_Name(self, node):
+        if isinstance(node.ctx, ast.Load):
+            self.used_variables.add(node.id)
+        elif isinstance(node.ctx, ast.Store):
+            self.assigned_variables.add(node.id)
+
 class PythonishQuery():
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query
         self.db = db
         self.code_object = None
+        self.tables = get_tables(query)
         parsed_ast = parse_to_ast(query)
         self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
@@ -154,6 +178,8 @@ class PythonishQuery():
         if not self.db:
             raise ValueError("Database is needed for iterating objects!")
         for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
+            if object_name not in self.tables:
+                continue
             iter_method = getattr(self.db, f"iter_{objects_name}")
             for obj in iter_method():
                 if self.match(obj):
@@ -164,6 +190,8 @@ class PythonishQuery():
         if not self.db:
             raise ValueError("Database is needed for iterating objects!")
         for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
+            if object_name not in self.tables:
+                continue
             iter_method = getattr(self.db, f"iter_{objects_name}")
             for obj in iter_method():
                 yield self.match(obj)
