@@ -1,6 +1,6 @@
 # object-ql
 
-A Object Query Language, for the [Gramps Project](https://gramps-project.org/) and other objects.
+An Object Query Language, for the [Gramps Project](https://gramps-project.org/) and other objects.
 
 This project is designed to be a drop-in replacement for https://github.com/DavidMStraub/gramps-ql
 
