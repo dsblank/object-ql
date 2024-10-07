@@ -10,6 +10,8 @@
 
 from __future__ import annotations  # can be removed at 3.8 EOL
 
+from ._version import __version__
+
 from .oql import (
     ObjectQuery,
     apply,
