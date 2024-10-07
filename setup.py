@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Pythonish Query Language, for Gramps and others
+# Python Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -28,24 +28,24 @@ def get_version(file, name="__version__"):
     return version_ns[name]
 
 
-__version__ = get_version(os.path.join(HERE, "pythonish_ql/_version.py"))
+__version__ = get_version(os.path.join(HERE, "python_ql/_version.py"))
 
 with io.open(os.path.join(HERE, "README.md"), encoding="utf8") as fh:
     long_description = fh.read()
 
 setup_args = dict(
-    name="pythonish-ql",
+    name="python-ql",
     version=__version__,
-    url="https://github.com/dsblank/pythonish-ql",
+    url="https://github.com/dsblank/python-ql",
     author="Doug Blank",
-    description="Pythonish query language for dictionary-like data",
+    description="Python query language for dictionary-like data",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
         "gramps",
     ],
     packages=[
-        "pythonish_ql",
+        "python_ql",
     ],
     include_package_data=True,
     python_requires=">=3.8",

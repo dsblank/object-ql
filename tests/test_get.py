@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Pythonish Query Language, for Gramps and others
+# Python Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -19,7 +19,7 @@ from gramps.gen.db.utils import make_database
 from gramps.gen.dbstate import DbState
 from gramps.gen.lib import Note, Person, PersonRef
 
-from pythonish_ql import PythonishQuery
+from python_ql import PythonQuery
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def db():
     TEST_GRAMPSHOME = tempfile.mkdtemp()
     os.environ["GRAMPSHOME"] = TEST_GRAMPSHOME
     dbman = CLIDbManager(DbState())
-    path, name = dbman.create_new_db_cli("PythonishQL Test", dbid="sqlite")
+    path, name = dbman.create_new_db_cli("PythonQL Test", dbid="sqlite")
     db = make_database("sqlite")
     db.load(path)
     with DbTxn("Add test objects", db) as trans:
@@ -64,28 +64,28 @@ def test_fixture(db):
 
 
 def test_get_person(db):
-    q = PythonishQuery("'handle001' in [get_person(ref).get_handle() for ref in person.get_person_ref_list()]", db=db)
+    q = PythonQuery("'handle001' in [get_person(ref).get_handle() for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_0(db):
-    q = PythonishQuery("[get_person(ref).gramps_id == 'person001' for ref in person.get_person_ref_list()]", db=db)
+    q = PythonQuery("[get_person(ref).gramps_id == 'person001' for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_1(db):
-    q = PythonishQuery("[get_person('handle001') for ref in person.get_person_ref_list()]", db=db)
+    q = PythonQuery("[get_person('handle001') for ref in person.get_person_ref_list()]", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_person_2(db):
-    q = PythonishQuery("any([get_person(x).gramps_id == 'person001' for x in person.get_person_ref_list()])", db=db)
+    q = PythonQuery("any([get_person(x).gramps_id == 'person001' for x in person.get_person_ref_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_note(db):
-    q = PythonishQuery("'handle003' in person.get_note_list() and person.gramps_id == 'person002'", db=db)
+    q = PythonQuery("'handle003' in person.get_note_list() and person.gramps_id == 'person002'", db=db)
     assert len(list(q.iter_objects())) == 1
-    q = PythonishQuery("any([get_note(ref).gramps_id == 'note003' for ref in person.get_note_list()])", db=db)
+    q = PythonQuery("any([get_note(ref).gramps_id == 'note003' for ref in person.get_note_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
 
 def test_get_note_0(db):
-    q = PythonishQuery("any([get_note(ref) for ref in person.get_note_list()])", db=db)
+    q = PythonQuery("any([get_note(ref) for ref in person.get_note_list()])", db=db)
     assert len(list(q.iter_objects())) == 1
 

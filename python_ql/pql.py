@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Pythonish Query Language, for Gramps and others
+# Python Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
 #
 # Largely based on https://github.com/DavidMStraub/gramps-ql
 # **************************************************************
+
+from __future__ import annotations  # can be removed at 3.8 EOL
 
 import ast
 from collections.abc import Generator
@@ -57,18 +59,18 @@ def match(
     db: Optional[DbReadBase] = None,
 ) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
-    pq = PythonishQuery(query=query, db=db)
+    pq = PythonQuery(query=query, db=db)
     return pq.match(obj)
 
 
 def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
-    pq = PythonishQuery(query=query, db=db)
+    pq = PythonQuery(query=query, db=db)
     return pq.iter_objects()
 
 def apply(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
-    pq = PythonishQuery(query=query, db=db)
+    pq = PythonQuery(query=query, db=db)
     return pq.iter_objects_apply()
 
 def get_tables(query: str):
@@ -149,7 +151,7 @@ class VariableVisitor(ast.NodeVisitor):
         elif isinstance(node.ctx, ast.Store):
             self.assigned_variables.add(node.id)
 
-class PythonishQuery():
+class PythonQuery():
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query
         self.db = db

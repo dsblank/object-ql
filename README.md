@@ -1,6 +1,6 @@
-# pythonish-ql
+# python-ql
 
-A Pythonish Query Language, for the [Gramps Project](https://gramps-project.org/) and other objects.
+A Python Query Language, for the [Gramps Project](https://gramps-project.org/) and other objects.
 
 This project is designed to be a drop-in replacement for https://github.com/DavidMStraub/gramps-ql
 
@@ -10,11 +10,7 @@ And, rather than having to convert the Gramps raw data into objects, then dicts,
 then back again to objects (when needed), this query system can operate directly
 on the objects.
 
-Originally, I had extended the syntax of language Python and therefore called this
-`Pythonish`. However, currently, the language is pure Python without any change in
-syntax.
-
-Each object can be identified by its type, eg `person`, `note`, `family`, etc.
+Each object can be identified by its lower-case class type, eg `person`, `note`, `family`, etc.
 
 Examples:
 

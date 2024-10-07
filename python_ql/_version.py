@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Pythonish Query Language, for Gramps and others
+# Python Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -8,10 +8,5 @@
 # Largely based on https://github.com/DavidMStraub/gramps-ql
 # **************************************************************
 
-from .pythonish_ql import (
-    PythonishQuery,
-    apply,
-    iter_objects,
-    match,
-    parse,
-)
+version_info = (0, 1, 0)
+__version__ = ".".join(map(str, version_info))
