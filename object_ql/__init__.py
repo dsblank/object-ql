@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Python Query Language, for Gramps and others
+# Object Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -8,5 +8,12 @@
 # Largely based on https://github.com/DavidMStraub/gramps-ql
 # **************************************************************
 
-version_info = (0, 1, 0)
-__version__ = ".".join(map(str, version_info))
+from __future__ import annotations  # can be removed at 3.8 EOL
+
+from .oql import (
+    ObjectQuery,
+    apply,
+    iter_objects,
+    match,
+    parse,
+)

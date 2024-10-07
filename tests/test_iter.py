@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Python Query Language, for Gramps and others
+# Object Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -19,7 +19,7 @@ from gramps.gen.db.utils import make_database
 from gramps.gen.dbstate import DbState
 from gramps.gen.lib import Person
 
-from python_ql import PythonQuery
+from object_ql import ObjectQuery
 
 
 @pytest.fixture
@@ -45,17 +45,17 @@ def test_fixture(db):
 
 
 def test_person_gramps_id(db):
-    q = PythonQuery("person", db=db)
+    q = ObjectQuery("person", db=db)
     assert len(list(q.iter_objects())) == 1
     for obj in q.iter_objects():
         assert isinstance(obj, Person)
-    q = PythonQuery("""person.gramps_id == "person001" """, db=db)
+    q = ObjectQuery("""person.gramps_id == "person001" """, db=db)
     assert len(list(q.iter_objects())) == 1
-    q = PythonQuery("""person.gramps_id != "person001" """, db=db)
+    q = ObjectQuery("""person.gramps_id != "person001" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonQuery("""person.gramps_id == "person002" """, db=db)
+    q = ObjectQuery("""person.gramps_id == "person002" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonQuery("""person.gramps_id > "person002" """, db=db)
+    q = ObjectQuery("""person.gramps_id > "person002" """, db=db)
     assert len(list(q.iter_objects())) == 0
-    q = PythonQuery("""person.gramps_id < "person002" """, db=db)
+    q = ObjectQuery("""person.gramps_id < "person002" """, db=db)
     assert len(list(q.iter_objects())) == 1

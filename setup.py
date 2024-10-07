@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Python Query Language, for Gramps and others
+# Object Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -28,24 +28,24 @@ def get_version(file, name="__version__"):
     return version_ns[name]
 
 
-__version__ = get_version(os.path.join(HERE, "python_ql/_version.py"))
+__version__ = get_version(os.path.join(HERE, "object_ql/_version.py"))
 
 with io.open(os.path.join(HERE, "README.md"), encoding="utf8") as fh:
     long_description = fh.read()
 
 setup_args = dict(
-    name="python-ql",
+    name="object-ql",
     version=__version__,
-    url="https://github.com/dsblank/python-ql",
+    url="https://github.com/dsblank/object-ql",
     author="Doug Blank",
-    description="Python query language for dictionary-like data",
+    description="Object query language for dictionary-like data",
     long_description=long_description,
     long_description_content_type="text/markdown",
     install_requires=[
         "gramps",
     ],
     packages=[
-        "python_ql",
+        "object_ql",
     ],
     include_package_data=True,
     python_requires=">=3.8",

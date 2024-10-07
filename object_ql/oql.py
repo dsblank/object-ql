@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # **************************************************************
-# Python Query Language, for Gramps and others
+# Object Query Language, for Gramps and others
 #
 # Copyright (c) Douglas Blank
 # MIT License
@@ -59,18 +59,18 @@ def match(
     db: Optional[DbReadBase] = None,
 ) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
-    pq = PythonQuery(query=query, db=db)
+    pq = ObjectQuery(query=query, db=db)
     return pq.match(obj)
 
 
 def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
-    pq = PythonQuery(query=query, db=db)
+    pq = ObjectQuery(query=query, db=db)
     return pq.iter_objects()
 
 def apply(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
-    pq = PythonQuery(query=query, db=db)
+    pq = ObjectQuery(query=query, db=db)
     return pq.iter_objects_apply()
 
 def get_tables(query: str):
@@ -151,7 +151,7 @@ class VariableVisitor(ast.NodeVisitor):
         elif isinstance(node.ctx, ast.Store):
             self.assigned_variables.add(node.id)
 
-class PythonQuery():
+class ObjectQuery():
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query
         self.db = db
