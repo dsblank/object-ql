@@ -140,6 +140,26 @@ def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     env.update(kwargs)
     return env
 
+class RestrictedVisitor(ast.NodeVisitor):
+    def visit_Name(self, node):
+        if ((node.id != "_") and
+            ((node.id in [
+                "eval", "exec", "input", "getattr", "setattr", "vars", "dir", "print",
+                "globals", "locals", "delattr", "raise",
+            ]) or
+             (node.id.startswith("_")))):
+
+            raise ValueError("Access denied to %r" % node.id)
+
+        self.generic_visit(node)
+
+    def visit_Attribute(self, node):
+        if (node.attr.startswith("_")):
+
+            raise ValueError("Access denied to %r" % node.attr)
+
+        self.generic_visit(node)
+        
 class VariableVisitor(ast.NodeVisitor):
     def __init__(self):
         self.used_variables = set()
@@ -156,8 +176,10 @@ class ObjectQuery():
         self.query = query.strip()
         self.db = db
         self.code_object = None
-        self.tables = get_tables(self.query)
         parsed_ast = parse_to_ast(self.query)
+        visitor = RestrictedVisitor()
+        visitor.visit(parsed_ast)
+        self.tables = get_tables(self.query)
         self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
     def match(self, obj: dict[str, Any]) -> bool:
