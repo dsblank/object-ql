@@ -75,7 +75,7 @@ def apply(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
 
 def get_tables(query: str):
     """Get the tables mentioned in a query"""
-    ast_query = parse_to_ast(query)
+    ast_query = parse_to_ast(query.strip())
     visitor = VariableVisitor()
     visitor.visit(ast_query)
     result = list((visitor.used_variables - visitor.assigned_variables) &
@@ -88,7 +88,7 @@ def get_tables(query: str):
 def parse_to_ast(query: str):
     """Parse query string into ast."""
     try:
-        ast_query = ast.parse(query, mode="eval")
+        ast_query = ast.parse(query.strip(), mode="eval")
     except Exception as exc:
         raise ParseFatalException(exc.msg, exc.offset) from None
 
@@ -97,7 +97,7 @@ def parse_to_ast(query: str):
 
 def parse(query: str) -> str:
     """Parse a query into ast and return ."""
-    parsed_ast = parse_to_ast(query)
+    parsed_ast = parse_to_ast(query.strip())
     return ast.unparse(parsed_ast)
 
 def find_handle(obj, method, env):
@@ -153,11 +153,11 @@ class VariableVisitor(ast.NodeVisitor):
 
 class ObjectQuery():
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
-        self.query = query
+        self.query = query.strip()
         self.db = db
         self.code_object = None
-        self.tables = get_tables(query)
-        parsed_ast = parse_to_ast(query)
+        self.tables = get_tables(self.query)
+        parsed_ast = parse_to_ast(self.query)
         self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
     def match(self, obj: dict[str, Any]) -> bool:
