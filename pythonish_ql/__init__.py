@@ -8,4 +8,10 @@
 # Largely based on https://github.com/DavidMStraub/gramps-ql
 # **************************************************************
 
-from .pythonish_ql import parse, match, PythonishQuery, apply
+from .pythonish_ql import (
+    PythonishQuery,
+    apply,
+    iter_objects,
+    match,
+    parse,
+)

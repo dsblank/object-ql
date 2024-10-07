@@ -15,7 +15,24 @@ import json
 
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
-from gramps.gen.lib import PrimaryObject
+from gramps.gen.lib import (
+    PrimaryObject,
+    Person,
+    SourceMediaType,
+    RepositoryType,
+    PlaceType,
+    NoteType,
+    NameType,
+    NameOriginType,
+    MarkerType,
+    LdsOrd,
+    FamilyRelType,
+    EventType,
+    EventRoleType,
+    Citation,
+    ChildRefType,
+    AttributeType
+)
 from gramps.gen.lib.serialize import to_json
 from gramps.gen.simple import SimpleAccess
 
@@ -85,6 +102,13 @@ def find_handle(obj, method, env):
 def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     """Create an environment with useful functions and self."""
     env = {}
+    # For constants, like Person.MALE
+    for primary_obj in [
+            Person, SourceMediaType, RepositoryType, PlaceType, NoteType, NameType,
+            NameOriginType, MarkerType, LdsOrd, FamilyRelType, EventType, EventRoleType,
+            Citation, ChildRefType, AttributeType,
+    ]:
+        env[primary_obj.__name__] = primary_obj
     if db is not None:
         env.update({
             "sa": SimpleAccess(db),
