@@ -19,6 +19,7 @@ from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
 from gramps.gen.simple import SimpleAccess
 
+from pyparsing.exceptions import ParseFatalException
 
 GRAMPS_OBJECT_NAMES = {
     "person": "people",
@@ -57,19 +58,16 @@ def parse_to_ast(query: str):
     """Parse query string into ast."""
     try:
         ast_query = ast.parse(query, mode="eval")
-        ast.fix_missing_locations(ast_query)
-        return ast_query
     except Exception as exc:
-        print("Parse error: %r" % exc)
-        return None
+        raise ParseFatalException(exc.msg, exc.offset) from None
+
+    ast.fix_missing_locations(ast_query)
+    return ast_query
 
 def parse(query: str) -> str:
     """Parse a query into ast and return ."""
     parsed_ast = parse_to_ast(query)
-    if parsed_ast:
-        return ast.unparse(parsed_ast)
-    else:
-        return None
+    return ast.unparse(parsed_ast)
 
 def find_handle(obj, method, env):
     """Find the handle in obj, or default to find in row."""
@@ -110,9 +108,7 @@ class PythonishQuery():
         self.db = db
         self.code_object = None
         parsed_ast = parse_to_ast(query)
-        if parsed_ast:
-            self.code_object = compile(parsed_ast, "<query>", mode="eval")
-
+        self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
     def match(self, obj: dict[str, Any]) -> bool:
         if self.code_object is None:
