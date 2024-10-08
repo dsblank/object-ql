@@ -14,6 +14,8 @@ import ast
 from collections.abc import Generator
 from typing import Any, Optional, Union
 import json
+import signal
+from pyparsing.exceptions import ParseFatalException
 
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
@@ -38,8 +40,7 @@ from gramps.gen.lib import (
 from gramps.gen.lib.serialize import to_json
 from gramps.gen.simple import SimpleAccess
 
-from pyparsing.exceptions import ParseFatalException
-
+EXPRESSION_TIMEOUT = 1  # integer seconds to timeout on eval per expression
 GRAMPS_OBJECT_NAMES = {
     "person": "people",
     "family": "families",
@@ -93,6 +94,9 @@ def parse_to_ast(query: str):
         raise ParseFatalException(exc.msg, exc.offset) from None
 
     ast.fix_missing_locations(ast_query)
+    # Will raise if violation:
+    visitor = RestrictedVisitor()
+    visitor.visit(ast_query)
     return ast_query
 
 def parse(query: str) -> str:
@@ -140,11 +144,29 @@ def make_env(db: DbReadBase, **kwargs) -> dict[str, Any]:
     env.update(kwargs)
     return env
 
+def alarm_handler(signum, frame):
+    raise TimeoutExpired
+
+def eval_with_timeout(code_object, global_env, local_env, timeout):
+    signal.signal(signal.SIGALRM, alarm_handler)
+    signal.alarm(timeout)
+    did_timeout = False
+
+    try:
+        result = eval(code_object, global_env, local_env)
+    except TimeoutExpired:
+        did_timeout = True
+        result = False
+    finally:
+        signal.alarm(0)
+
+    return result, did_timeout
+
 class RestrictedVisitor(ast.NodeVisitor):
     def visit_Name(self, node):
         if ((node.id != "_") and
             ((node.id in [
-                "eval", "exec", "input", "getattr", "setattr", "vars", "dir", "print",
+                "eval", "exec", "input", "getattr", "setattr", "vars", "print",
                 "globals", "locals", "delattr", "raise",
             ]) or
              (node.id.startswith("_")))):
@@ -171,14 +193,15 @@ class VariableVisitor(ast.NodeVisitor):
         elif isinstance(node.ctx, ast.Store):
             self.assigned_variables.add(node.id)
 
+class TimeoutExpired(Exception):
+    pass
+
 class ObjectQuery():
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query.strip()
         self.db = db
         self.code_object = None
         parsed_ast = parse_to_ast(self.query)
-        visitor = RestrictedVisitor()
-        visitor.visit(parsed_ast)
         self.tables = get_tables(self.query)
         self.code_object = compile(parsed_ast, "<query>", mode="eval")
 
@@ -189,7 +212,12 @@ class ObjectQuery():
         key = obj.__class__.__name__.lower()
         env = make_env(self.db, **{key: obj, "obj": obj})
         try:
-            results = eval(self.code_object, env, {})
+            results, did_timeout = eval_with_timeout(
+                self.code_object,
+                env,
+                {},
+                EXPRESSION_TIMEOUT,
+            )
         except Exception as esc:
             results = False
             #print(obj)
