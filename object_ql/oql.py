@@ -167,7 +167,8 @@ class RestrictedVisitor(ast.NodeVisitor):
         if ((node.id != "_") and
             ((node.id in [
                 "eval", "exec", "input", "getattr", "setattr", "vars", "print",
-                "globals", "locals", "delattr", "raise",
+                "globals", "locals", "delattr", "raise", "open", "super",
+                "memoryview", "help", "delattr", "compile", "breakpoint"
             ]) or
              (node.id.startswith("_")))):
 
